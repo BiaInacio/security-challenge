@@ -1,0 +1,485 @@
+User Authentication,,,,,,,
+Test Case ID,Test type,Test Case name,Prerequisites,Test Steps,Expected Results,Status,Note
+User-authentication-01,Basic test (frontend),"As an anonymous user, I want to log in on the site when I submit valid credentials on the login form","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site","1. Access Incident Management System;
+2. Input a valid credential of an user on the ""Username or Email"" field;
+3. Input a valid credential of the same user used on step 2 on the ""Password"" field;
+4. Click on Sign in button.","1. Incident Management System should be displayed;
+2. The field ""Username or Email"" should accept the string inputted;
+3. The field ""Password"" should accept the string inputted;
+4. User should be logged.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+User-authentication-02,Basic test (frontend),"As an anonymous user, I want to not be able to log in when I submit invalid credentials on the login form",1. To have access to the Incident Management System platform;,"1. Access Incident Management System;
+2. Input a invalid match of credentials on login form fields;
+3. Click on Sign in button.","1. Incident Management System should be displayed;
+2. The login fields should accept the string inputted;
+3. User shouldn't be logged and an error message should be displayed.",Not Started,
+User-authentication-03,Basic test (frontend),"As an anonymous user, I want to not be able to log in on the site when I don't fill the ""Username or Email"" field",1. To have access to the Incident Management System platform;,"1. Access Incident Management System;
+2. Input some string on the ""Password"" field;
+3. Click on Sign in button.","1. Incident Management System should be displayed;
+2. The field ""Password"" should accept the string inputted;
+3. User shouldn't be logged and warning saying that the ""Username or email"" field should be filled should be displayed above the field.",Not Started,
+User-authentication-04,Basic test (frontend),"As an anonymous user, I want to not be able to log in on the site when I don't fill the ""Password"" field",1. To have access to the Incident Management System platform;,"1. Access Incident Management System;
+2. Input some string on the ""Username or email"" field;
+3. Click on Sign in button.","1. Incident Management System should be displayed;
+2. The field ""Username or email"" should accept the string inputted;
+3. User shouldn't be logged and warning saying that the ""Password"" field should be filled should be displayed above the field.",Not Started,
+User-authentication-05,Security Test,"As an anonymous user, I want the login form to not accept Code injection on the login form",1. To have access to the Incident Management System platform;,"1. Access Incident Management System;
+2. Fill the ""Username or Email"" field with any code injection string;
+3. Fill the ""password"" field with any code injection string
+4. Click on Sign in button.","1. Incident Management System should be displayed;
+2. The field ""Username or Email"" should accept the string inputted;
+3. The field ""Password"" should accept the string inputted;
+3. User shouldn't be logged and an error should be displayed.",Not Started,"Example of code injections to use:
+Command Injection: ;ls, &&dir, |whoami, ||id.
+SQL Injection: ' OR '1'='1, '; DROP TABLE users; --.
+Code Injection: <?php system($_GET['cmd']); ?>. "
+User-authentication-06,Basic test (frontend),"As an logged user, I want to log out","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site","1. Access Incident Management System;
+2. Input a valid credential of an user on the ""Username or Email"" field;
+3. Input a valid credential of the same user used on step 2 on the ""Password"" field;
+4. Click on Sign in button.
+4. Click on Logout button.","1. Incident Management System should be displayed;
+2. The field ""Username or Email"" should accept the string inputted;
+3. The field ""Password"" should accept the string inputted;
+4. User should be logged out.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+User-authentication-07,Basic test (backend),"As an anonymous user, I want to log in on the site when I submit valid credentials via API service","1. To have access to the Incident Management System platform API service;
+2. To have valid credentials of a user on the site","1. Send a POST request to ""/api/auth/login"" with a valid login schema with the valid credentials of an existing user","1. The API should answer with a success status (200) and on the following Schema template:
+{
+  ""success"": true,
+  ""data"": {
+    ""token"": ""string"",
+    ""user"": {
+      ""id"": ""string"",
+      ""username"": ""string"",
+      ""email"": ""string"",
+      ""role"": ""user""
+    }
+  }
+} ",Not Started,"Exemple of a valid login schema:
+{
+  ""username"": ""john_doe"",
+  ""password"": ""SecurePass123""
+}
+
+Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+User-authentication-08,Basic test (backend),"As an anonymous user, I want to not be able to log in when I submit invalid credentials via API service",1. To have access to the Incident Management System platform API service;,"1. Send a POST request to ""/api/auth/login"" with a valid login schema with the invalid credentials","1. The API should answer with a success status (401) and on the following Schema template:
+{
+  ""success"": false,
+  ""error"": ""string"",
+  ""errors"": [
+    {
+      ""field"": ""string"",
+      ""message"": ""string""
+    }
+  ]
+}",Not Started,"Exemple of a valid login schema:
+{
+  ""username"": ""john_doe"",
+  ""password"": ""SecurePass123""
+}"
+User-authentication-09,Basic test (backend),"As an anonymous user, I want to not be able to log in when I submit invalid login schema via API service","1. To have access to the Incident Management System platform API service;
+2. To have valid credentials of a user on the site","1. Send a POST request to ""/api/auth/login"" with a invalid login schema with the valid credentials","1. The API should answer with a success status (400) and on the following Schema template:
+{
+  ""success"": false,
+  ""error"": ""string"",
+  ""errors"": [
+    {
+      ""field"": ""string"",
+      ""message"": ""string""
+    }
+  ]
+}",Not Started,"Exemple of a valid login schema, it shuld be changed for this test:
+{
+  ""username"": ""john_doe"",
+  ""password"": ""SecurePass123""
+}
+
+Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+Creating a new security incident,,,,,,,
+Test Case ID,Test type,Test Case name,Prerequisites,Test Steps,Expected Results,Status,Note
+new-incident-01,Basic test (frontend),"As a logged user, I want to successfully create a new incident","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the ""+ New Incident"";
+4. Fill all New incident form fields with valid values;
+5. Click on ""Create Incident"" button.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. A pop up should with the new incident form should be displayed with the following fields:
+- Title (Required)
+- Description (Required)
+- Category (Required)
+- Priority
+- Source
+- Tags (comma separated)
+4. All fields should accept the values inserted;
+5. A new incident should be created with the values provided on step 4. The new incident popup should close. The new incident should be on the top of the Incidents table.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+new-incident-02,Basic test (frontend),"As a logged user, I want to successfully create a new incident with only the required information","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the ""+ New Incident"";
+4. Fill only the required fields of the New incident with valid values;
+5. Click on ""Create Incident"" button.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. A pop up should with the new incident form should be displayed;
+4. The required fields should accept the values inserted;
+5. A new incident should be created with the values provided on step 4. The new incident popup should close. The new incident should be on the top of the Incidents table.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+new-incident-03,Basic test (frontend),"As a logged user, I want to not be able to create a new incident when I don't fill a required field","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the ""+ New Incident"";
+4. Fill all New incident form fields except one of the required fields;
+5. Click on ""Create Incident"" button.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. A pop up should with the new incident form should be displayed;
+4. All fields should accept the values inserted;
+5. A new incident shouldn't be created and a warning saying that the empty required field should be filled should be displayed above the said field.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+new-incident-04,Basic test (frontend),"As a logged user, I want to not be able to create a new incident when I  fill a field with invalid data","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the ""+ New Incident"";
+4. Fill all New incident form fields with valid data except one of the required fields;
+5. Fill the empty required field with invalid value (like only a space)
+6. Click on ""Create Incident"" button.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. A pop up should with the new incident form should be displayed;
+4. All fields should accept the values inserted;
+5. Remaining field should accept the invalid value inserted;
+6. A new incident shouldn't be created and an error should be displayed about the invalid data.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+new-incident-05,Basic test (frontend),"As a logged user, I want to cancel the creation of a new incident by clicking on the Cancel button","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the ""+ New Incident"";
+4. Fill some fields of the New incident with valid values;
+5. Click on ""Cancel"" button.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. A pop up should with the new incident form should be displayed;
+4. The required fields should accept the values inserted;
+5. A new incident shouldn't be created with the values provided on step 4. The new incident popup should close.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+new-incident-06,Basic test (frontend),"As a logged user, I want to cancel the creation of a new incident by clicking on 'X' to close the modal","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the ""+ New Incident"";
+4. Fill some fields of the New incident with valid values;
+5. Click on 'X' icon of the modal.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. A pop up should with the new incident form should be displayed;
+4. The required fields should accept the values inserted;
+5. A new incident shouldn't be created with the values provided on step 4. The new incident popup should close.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+new-incident-07,Security Test,"As a logged user, I want the new incident form to not accept Code injection values",1. To have access to the Incident Management System platform;,"1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the ""+ New Incident"";
+4. Fill all New incident form fields with valid data except one of the required fields;
+5. Fill the empty required field with a code injection;
+6. Click on ""Create Incident"" button.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. A pop up should with the new incident form should be displayed;
+4. All fields should accept the values inserted;
+5. Remaining field should accept the invalid value inserted;
+6. A new incident shouldn't be created and an error should be displayed about the invalid data.",Not Started,"Example of code injections to use:
+Command Injection: ;ls, &&dir, |whoami, ||id.
+SQL Injection: ' OR '1'='1, '; DROP TABLE users; --.
+Code Injection: <?php system($_GET['cmd']); ?>. "
+new-incident-08,Basic test (backend),"As a logged user, I want to successfully create a new incident via API","1. To have access to the Incident Management System platform API service;
+2. To have valid credentials of a user on the site","1. Authenticate via API
+2. Send a POST request to ""/api/incidents"" with a valid create incident schema","1. The API should answer with a success status (200) and on the following Schema template:
+{
+  ""success"": true,
+  ""data"": {
+    ""_id"": ""string"",
+    ""title"": ""string"",
+    ""description"": ""string"",
+    ""status"": ""open"",
+    ""priority"": ""low"",
+    ""category"": ""string"",
+    ""source"": ""web"",
+    ""reporter"": {
+      ""id"": ""string"",
+      ""username"": ""string"",
+      ""email"": ""string"",
+      ""role"": ""user""
+    },
+    ""assignee"": {
+      ""id"": ""string"",
+      ""username"": ""string"",
+      ""email"": ""string"",
+      ""role"": ""user""
+    },
+    ""comments"": [],
+    ""tags"": [],
+    ""createdAt"": ""2026-02-02T04:14:54.131Z"",
+    ""updatedAt"": ""2026-02-02T04:14:54.131Z""
+  }
+}",Not Started,"Exemple of a valid login schema:
+{
+  ""title"": ""Database connection issue"",
+  ""description"": ""Unable to connect to production database"",
+  ""category"": ""Infrastructure"",
+  ""priority"": ""medium"",
+  ""source"": ""web"",
+  ""tags"": [
+    ""database"",
+    ""production""
+  ],
+  ""assignee"": ""<user ID>""
+}
+
+Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+new-incident-09,Basic test (backend),"As a logged user, I want to not be able to create a new incident via API when the schema is wrong","1. To have access to the Incident Management System platform API service;
+2. To have valid credentials of a user on the site","1. Authenticate via API
+2. Send a POST request to ""/api/incidents"" with a valid create incident schema","1. The API should answer with a success status (401) and on the following Schema template:
+{
+  ""success"": false,
+  ""error"": ""string"",
+  ""errors"": [
+    {
+      ""field"": ""string"",
+      ""message"": ""string""
+    }
+  ]
+}",Not Started,"Exemple of a valid login schema:
+{
+  ""username"": ""john_doe"",
+  ""password"": ""SecurePass123""
+}"
+Updating incident status and priority,,,,,,,
+Test Case ID,Test type,Test Case name,Prerequisites,Test Steps,Expected Results,Status,Note
+update-incident-01,Basic test (frontend),"As a logged user, I want to successfully update an existing incident status on the Incidents table","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the status selectbox of one of the incidents;
+4. Select another status from the select box;","1. Incident Management System should be displayed;
+2. User should be logged;
+3. As the Status information is a select box field, all options of the field should be displayed:
+- Open
+- In Progress
+- Resolved
+- Closed
+4. The incident status should be changed to the one selected.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+update-incident-02,Basic test (frontend),"As a logged user, I want to successfully update an existing incident status on the Incidents details overlay","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the eye icon under the actions column of one of the incidents
+4. Click on the Status selectbox;
+5. Select another status from the select box;
+6. Close the incident details pop up by clicking on the 'X' icon","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The Incident Details pop up should be displayed with details of the incident;
+4. As the Status information is a select box field, all options of the field should be displayed:
+- Open
+- In Progress
+- Resolved
+- Closed
+5. The incident status should be changed to the one selected.
+6. On the incident table, the incident status should be changed to the one selected on previous step for the incident selected on step 3.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+Adding comments to incidents,,,,,,,
+Test Case ID,Test type,Test Case name,Pre-requisites,Test Steps,Expected Results,Status,Note
+comment-incident-01,Basic test (frontend),"As a logged user, I want to successfully add a comment on an existing incident","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the eye icon under the actions column of one of the incidents;
+4. Check the comment secction the the bottom of the Incident details pop up;
+5. Add a string on the ""Add a comment"" text field;
+6. Click on ""Add"" button.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The Incident Details pop up should be displayed with details of the incident;
+4. The comment section should display:
+- List of all comments of that incident, if there is no comment, a ""No comments yet"" message should be displayed.
+- Next to the section title it should display the number of comments that the incident has.
+- ""Add a comment"" text field
+- Inactive ""Add"" button, it should only be active when the text field has a value
+5. The text field should accept teh string typed.
+6. A new comment should be added on the comments list. The number os comments should be increased",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+comment-incident-02,Basic test (frontend),"As a logged user, I want the incident comment to not run Code injection codes","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Click on the eye icon under the actions column of one of the incidents
+4. Add a code injection string on the ""Add a comment"" text field;
+5. Click on ""Add"" button","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The Incident Details pop up should be displayed with details of the incident;
+4. The incident status should be changed to the one selected.
+5. The system should accept the code injection as a noremal code and not as a code.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+Filtering incidents,,,,,,,
+Test Case ID,Test type,Test Case name,Prerequisites,Test Steps,Expected Results,Status,Note
+filter-incident-01,Basic test (frontend),"As a logged user, I want to filter the incident table content by status","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Check the Status filters options;
+4. Update the Status filter to a new value:","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The Status filters should be a select box with the following options:
+- All Status (default option)
+- Open
+- In Progress
+- Resolved
+- Closed
+4. The list of incidents should be filtered to show only the incidents that have the status selected. If there are no incidents with the selected status a ""No incidents found"" message should be displayed instead of the table content.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+filter-incident-02,Basic test (frontend),"As a logged user, I want to filter the incident table content by priority","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Check the Priority filters options;
+4. Update the Priority filter to a new value:","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The Priority filters should be a select box with the following options:
+- All Priorities (default option)
+- Low
+- Medium
+- High
+- Critical
+4. The list of incidents should be filtered to show only the incidents that have the priority selected. If there are no incidents with the selected priority a ""No incidents found"" message should be displayed instead of the table content.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+filter-incident-03,Basic test (frontend),"As a logged user, I want to filter the incident table content by source","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Check the Source filters options;
+4. Update the Source filter to a new value:","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The Source filters should be a select box with the following options:
+- All Sources (default option)
+- Web
+- Email
+- Phone
+- API
+- Monitoring
+- Internal
+- Other
+4. The list of incidents should be filtered to show only the incidents that have the source selected. If there are no incidents with the selected source a ""No incidents found"" message should be displayed instead of the table content.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+filter-incident-04,Basic test (frontend),"As a logged user, I want to filter the incident table content by multiple filters","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Change more than one of the incident filters: Status, Priority and Source.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The list of incidents should be filtered to show only the incidents that contains all of the filters values selected. If there are no incidents with the selected source a ""No incidents found"" message should be displayed instead of the table content.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+filter-incident-05,Basic test (frontend),"As a logged user, I want to reset the filters of the incident table","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Change more than one of the incident filters: Status, Priority and Source.
+4. Click on the ""Clear filters"" button","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The list of incidents should be filtered to show only the incidents that contains all of the filters values selected. If there are no incidents with the selected source a ""No incidents found"" message should be displayed instead of the table content.
+4. All filter should display their default options back and the incidents table should display all incidents as no filter should be in place anymore",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+Searching incidents by keywords,,,,,,,
+Test Case ID,Test type,Test Case name,Prerequisites,Test Steps,Expected Results,Status,Note
+search-incident-01,Basic test (frontend),"As a logged user, I want to search for an incident by its title","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Type part or the whole title of an incident on the Search field.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The list of incidents should be filtered to show only the incidents which title contains the string type. If there are no incidents that match the search a ""No incidents found"" message should be displayed instead of the table content.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+search-incident-02,Basic test (frontend),"As a logged user, I want to search for an incident by its description","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Type part or the whole description of an incident on the Search field.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The list of incidents should be filtered to show only the incidents which description contains the string type. If there are no incidents that match the search a ""No incidents found"" message should be displayed instead of the table content.",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"
+search-incident-03,Basic test (frontend),"As a logged user, I want to reset the search of the incident table","1. To have access to the Incident Management System platform;
+2. To have valid credentials of a user on the site;
+3. To have existing incidents created previously.","1. Access Incident Management System;
+2. Log in with any user;
+3. Type any string on the Search field;
+4. Click on the ""Clear filters"" button.","1. Incident Management System should be displayed;
+2. User should be logged;
+3. The list of incidents should be filtered to show only the incidents which title and/or description contains the string typed. If there are no incidents that match the search a ""No incidents found"" message should be displayed instead of the table content.
+4. The search field should be emptied and the incidents table should display all incidents as no search should be in place anymore",Not Started,"Valid credentials that can be used on this test:
+Admin - username: admin, password: Admin123!
+Security Analyst - username: john_analyst, password: John123!
+SOC Analyst - username: sarah_soc, password: Sarah123!
+Incident Responder - username: mike_incident, password: Mike123!"

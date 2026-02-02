@@ -1,0 +1,2327 @@
+{
+	"info": {
+		"_postman_id": "23ec1b0f-4634-4962-b8c3-62ce8ee27364",
+		"name": "JOES Test",
+		"description": "This ia a collection of requests used to test JOES test.\n\n## Authentication Workflow\n\nTo interact with the requests in the **Incidents** folder (excluding 401 validation tests), a valid **Bearer Token** is required.\n\n### How it Works:\n\n1. **Automatic Updates:** The **Successful Login** request (under the `Authentication` folder) contains a **Tests** script.\n    \n2. **Token Capture:** Once the login is executed, the script automatically extracts the JWT from the response body and updates the `authenticationToken` collection variable.\n    \n3. **Inheritance:** All requests within this collection are configured to use `{{authenticationToken}}`. This ensures that as soon as you log in, every other request is immediately authorized without manual copy-pasting.\n    \n\n### Troubleshooting:\n\n- If you receive a `401 Unauthorized` error on incident requests, simply re-run the **Successful Login** request to refresh the token.\n    \n- Ensure your request **Authorization** tab is set to **\"Inherit auth from parent.\"**",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44508055",
+		"_collection_link": "https://bia-3374572.postman.co/workspace/bia's-Workspace~2b5c250c-34e6-4105-80f3-820c7a0eb075/collection/44508055-23ec1b0f-4634-4962-b8c3-62ce8ee27364?action=share&source=collection_link&creator=44508055"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Successful login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Verify response status is 200",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Test 2: Validate response data type and content",
+									"pm.test(\"Validation error structure and data are correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data.user.id).to.be.an('string');",
+									"    pm.expect(jsonData.data.user.username).to.be.an('string');",
+									"    pm.expect(jsonData.data.user.email).to.be.an('string');",
+									"    pm.expect(jsonData.data.user.role).to.be.an('string');",
+									"});",
+									"",
+									"// Test 3: Verify token is a non-empty string",
+									"pm.test(\"Token is a non-empty string\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.token).to.be.a(\"string\");",
+									"    pm.expect(jsonData.data.token).to.have.length.greaterThan(0);",
+									"});",
+									"",
+									"// Test 5: Verify username in response matches request username",
+									"pm.test(\"Username in response matches request username\", function () {",
+									"    const requestBody = JSON.parse(pm.request.body.raw);",
+									"    const responseUser = pm.response.json().data.user;",
+									"    pm.expect(responseUser.username).to.eql(requestBody.username);",
+									"});",
+									"",
+									"// Add Token for the user authentication to a Collection Variable",
+									"var jsonData = pm.response.json();",
+									"var authenticationToken = jsonData.data.token;",
+									"// Change .variables to .collectionVariables",
+									"pm.collectionVariables.set(\"authenticationToken\", authenticationToken);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Pre-request Script",
+									"pm.test(\"Pre-check: Required body fields are present\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    ",
+									"    // Check if fields exist and are not empty",
+									"    pm.expect(body.username, \"Username is required\").to.be.a('string').and.not.empty;",
+									"    pm.expect(body.password, \"Password is required\").to.be.a('string').and.not.empty;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"sarah_soc\",\n  \"password\": \"Sarah123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Wrong login schema (400 error)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 Bad Request\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"// Test 2: Validate response data type and content",
+									"pm.test(\"Validation error structure and data are correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.false;",
+									"    pm.expect(jsonData.error).to.eql(\"Validation failed\");",
+									"    pm.expect(jsonData.errors).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Each error object has 'field' and 'message' properties\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    jsonData.errors.forEach(function (errorObj) {",
+									"        pm.expect(errorObj).to.have.property(\"field\");",
+									"        pm.expect(errorObj).to.have.property(\"message\");",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"Errors array contains at least 2 errors for username and password fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.errors.length).to.be.eql(2);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username_field\": \"sarah_soc\",\n  \"Password\": \"Sarah123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unsuccessful login (401 error)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Verify the response status code is 401 (Unauthorized)",
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"// Test 2: Validate response data type and content",
+									"pm.test(\"Validation error structure and data are correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.false;",
+									"    pm.expect(jsonData.error).to.eql(\"Invalid credentials\");",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"john_doe\",\n  \"password\": \"SecurePass123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							"// Pre-request Script",
+							"pm.test(\"Pre-check: Required body fields are present\", function () {",
+							"    const body = JSON.parse(pm.request.body.raw);",
+							"    ",
+							"    // Check if fields exist and are not empty",
+							"    pm.expect(body.username, \"Username is required\").to.be.a('string').and.not.empty;",
+							"    pm.expect(body.password, \"Password is required\").to.be.a('string').and.not.empty;",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Incidents",
+			"item": [
+				{
+					"name": "Incident creation",
+					"item": [
+						{
+							"name": "Successful create an incident (only required fields)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 201 (Created)",
+											"pm.test(\"Status code is 201 Created\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const requestBody = JSON.parse(pm.request.body.raw);",
+											"    ",
+											"    pm.expect(jsonData.success).to.be.true;",
+											"    pm.expect(jsonData.data.title).to.eql(requestBody.title);",
+											"    pm.expect(jsonData.data.description).to.eql(requestBody.description);",
+											"    pm.expect(jsonData.data.category).to.eql(requestBody.category);",
+											"    pm.expect(jsonData.data.status).to.eql(\"open\");",
+											"    pm.expect(jsonData.data.source).to.eql(\"web\");",
+											"    pm.expect(jsonData.data.reporter._id).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter.username).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter.email).to.be.an('string');",
+											"    pm.expect(jsonData.data.tags).to.be.eql([]);",
+											"    pm.expect(jsonData.data.comments).to.be.eql([]);",
+											"    pm.expect(jsonData.data.createdAt).to.be.an('string');",
+											"    pm.expect(jsonData.data.updatedAt).to.be.an('string');",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Incident from API\",\n  \"description\": \"Test incident from API\",\n  \"category\": \"Test\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Successful create an incident (all required fields)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status is 201",
+											"pm.test(\"Status code is 201 Created\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const requestBody = JSON.parse(pm.request.body.raw);",
+											"    ",
+											"    pm.expect(jsonData.success).to.be.true;",
+											"    pm.expect(jsonData.data.title).to.eql(requestBody.title);",
+											"    pm.expect(jsonData.data.description).to.eql(requestBody.description);",
+											"    pm.expect(jsonData.data.category).to.eql(requestBody.category);",
+											"    pm.expect(jsonData.data.status).to.eql(\"open\");",
+											"    pm.expect(jsonData.data.source).to.eql(requestBody.source);",
+											"    pm.expect(jsonData.data.reporter._id).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter.username).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter.email).to.be.an('string');",
+											"    pm.expect(jsonData.data.tags).to.be.eql(requestBody.tags);",
+											"    pm.expect(jsonData.data.comments).to.be.eql([]);",
+											"    pm.expect(jsonData.data.createdAt).to.be.an('string');",
+											"    pm.expect(jsonData.data.updatedAt).to.be.an('string');",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Incident from API all fields\",\n  \"description\": \"Test incident from API all fields\",\n  \"category\": \"category\",\n  \"priority\": \"low\",\n  \"source\": \"internal\",\n  \"tags\": [\n    \"tag1\",\n    \"tag2\",\n    \"tag3\"\n  ],\n  \"assignee\": \"697e796a4cad75dbadd95fe8\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful create an incident (invalid values - error 400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Check response status code",
+											"pm.test(\"Status code is 400 (Bad Request)\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"Validation failed\");",
+											"    pm.expect(jsonData.errors).to.be.an('array');",
+											"});",
+											"",
+											"// Test 3: Validate errors array contains objects with 'field' and 'message' properties",
+											"pm.test(\"Each error object has 'field' and 'message' properties\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.errors.length).to.be.eql(3);",
+											"    ",
+											"    jsonData.errors.forEach(function(errorItem, index) {",
+											"        pm.expect(errorItem, `Error at index ${index}`).to.have.property('field');",
+											"        pm.expect(errorItem, `Error at index ${index}`).to.have.property('message');",
+											"        pm.expect(errorItem.field).to.be.a('string');",
+											"        pm.expect(errorItem.message).to.be.a('string');",
+											"    });",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Incident from API\",\n  \"description\": \"Test incident from API\",\n  \"category\": \"Test\",\n  \"priority\": \"dog\",\n  \"source\": \"cat\",\n  \"tags\": [\n    \"tag1\",\n    \"tag2\",\n    \"tag3\"\n  ],\n  \"assignee\": \"beatriz\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful create an incident (no authentication - error 401)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Check response status code",
+											"pm.test(\"Status code is valid (401 for auth error)\", function () {",
+											"    pm.expect(pm.response.code).to.be.oneOf([401]);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"No token provided. Please authenticate.\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Incident from API\",\n  \"description\": \"Test incident from API\",\n  \"category\": \"Test\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful create an incident (invalid schema - error 400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 400",
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"Validation failed\");",
+											"    pm.expect(jsonData.errors).to.be.an('array');",
+											"});",
+											"",
+											"// Test 3: Verify errors array contains objects with \"field\" and \"message\" properties",
+											"pm.test(\"Each error object has 'field' and 'message' properties\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    jsonData.errors.forEach(function (error) {",
+											"        pm.expect(error).to.have.property(\"field\");",
+											"        pm.expect(error).to.have.property(\"message\");",
+											"    });",
+											"});",
+											"",
+											"// Test 4: Verify required fields (title, description, category) are present in errors",
+											"pm.test(\"Required fields (title, description, category) are in errors\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const errorFields = jsonData.errors.map(function (error) {",
+											"        return error.field;",
+											"    });",
+											"",
+											"    pm.expect(jsonData.errors.length).to.be.eql(3);",
+											"    pm.expect(errorFields).to.include(\"title\");",
+											"    pm.expect(errorFields).to.include(\"description\");",
+											"    pm.expect(errorFields).to.include(\"category\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"Title\": \"Incident from API all fields\",\n  \"description_field\": \"Test incident from API all fields\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									"// Pre-request Script",
+									"pm.test(\"Pre-check: Required fields are present\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    ",
+									"    // Check if fields exist and are not empty",
+									"    pm.expect(body.title, \"Title is required\").to.be.a('string').and.not.empty;",
+									"    pm.expect(body.description, \"Description is required\").to.be.a('string').and.not.empty;",
+									"    pm.expect(body.category, \"Category is required\").to.be.a('string').and.not.empty;",
+									"});"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Incidents",
+					"item": [
+						{
+							"name": "Get incidents list",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 200",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    ",
+											"    pm.expect(jsonData.success).to.be.true;",
+											"    pm.expect(jsonData.data.incidents).to.an(\"array\");",
+											"    pm.expect(jsonData.data.pagination).to.be.an(\"object\");",
+											"});",
+											"",
+											"// Test 3: Verify each incident has required fields",
+											"pm.test(\"Each incident has required fields\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const incidents = jsonData.data.incidents;",
+											"    const requiredFields = [\"_id\", \"title\", \"description\", \"status\", \"priority\", \"category\", \"source\", \"reporter\", \"tags\", \"comments\", \"createdAt\", \"updatedAt\"];",
+											"    ",
+											"    incidents.forEach((incident, index) => {",
+											"        requiredFields.forEach(field => {",
+											"            pm.expect(incident, `Incident at index ${index} missing field: ${field}`).to.have.property(field);",
+											"        });",
+											"    });",
+											"});",
+											"",
+											"// Test 4: Verify pagination object has expected structure",
+											"pm.test(\"Pagination has required properties: total, page, pages, limit\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const pagination = jsonData.data.pagination;",
+											"    ",
+											"    pm.expect(pagination).to.have.property(\"total\");",
+											"    pm.expect(pagination).to.have.property(\"page\");",
+											"    pm.expect(pagination).to.have.property(\"pages\");",
+											"    pm.expect(pagination).to.have.property(\"limit\");",
+											"    ",
+											"    pm.expect(pagination.total).to.be.a(\"number\");",
+											"    pm.expect(pagination.page).to.be.a(\"number\");",
+											"    pm.expect(pagination.pages).to.be.a(\"number\");",
+											"    pm.expect(pagination.limit).to.be.a(\"number\");",
+											"});",
+											"",
+											"// Test 5: Verify status values are valid",
+											"pm.test(\"All incidents have valid status values\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const incidents = jsonData.data.incidents;",
+											"    const validStatuses = [\"open\", \"in-progress\", \"resolved\"];",
+											"    ",
+											"    incidents.forEach((incident, index) => {",
+											"        pm.expect(validStatuses, `Incident at index ${index} has invalid status: ${incident.status}`).to.include(incident.status);",
+											"    });",
+											"});",
+											"",
+											"// Test 6: Verify priority values are valid",
+											"pm.test(\"All incidents have valid priority values\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const incidents = jsonData.data.incidents;",
+											"    const validPriorities = [\"low\", \"medium\", \"high\", \"critical\"];",
+											"    ",
+											"    incidents.forEach((incident, index) => {",
+											"        pm.expect(validPriorities, `Incident at index ${index} has invalid priority: ${incident.priority}`).to.include(incident.priority);",
+											"    });",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents?page=1&limit=30&sortBy=createdAt&sortOrder=desc",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "30"
+										},
+										{
+											"key": "status",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "priority",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "severity",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "source",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "search",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get incidents list with parameters",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 200",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    ",
+											"    pm.expect(jsonData.success).to.be.true;",
+											"    pm.expect(jsonData.data.incidents).to.an(\"array\");",
+											"    pm.expect(jsonData.data.pagination).to.be.an(\"object\");",
+											"});",
+											"",
+											"// Test 3: Verify each incident has required fields",
+											"pm.test(\"Each incident has required fields\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const incidents = jsonData.data.incidents;",
+											"    const requiredFields = [\"_id\", \"title\", \"description\", \"status\", \"priority\", \"category\", \"source\", \"reporter\", \"tags\", \"comments\", \"createdAt\", \"updatedAt\"];",
+											"    ",
+											"    incidents.forEach((incident, index) => {",
+											"        requiredFields.forEach(field => {",
+											"            pm.expect(incident, `Incident at index ${index} missing field: ${field}`).to.have.property(field);",
+											"        });",
+											"    });",
+											"});",
+											"",
+											"// Test 4: Verify pagination object has expected structure",
+											"pm.test(\"Pagination has required properties: total, page, pages, limit\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const pagination = jsonData.data.pagination;",
+											"    ",
+											"    pm.expect(pagination).to.have.property(\"total\");",
+											"    pm.expect(pagination).to.have.property(\"page\");",
+											"    pm.expect(pagination).to.have.property(\"pages\");",
+											"    pm.expect(pagination).to.have.property(\"limit\");",
+											"    ",
+											"    pm.expect(pagination.total).to.be.a(\"number\");",
+											"    pm.expect(pagination.page).to.be.a(\"number\");",
+											"    pm.expect(pagination.pages).to.be.a(\"number\");",
+											"    pm.expect(pagination.limit).to.be.a(\"number\");",
+											"});",
+											"",
+											"// Test 5: Verify status values are valid",
+											"pm.test(\"All incidents have valid status values\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const incidents = jsonData.data.incidents;",
+											"    const validStatuses = [\"open\", \"in-progress\", \"resolved\"];",
+											"    ",
+											"    incidents.forEach((incident, index) => {",
+											"        pm.expect(validStatuses, `Incident at index ${index} has invalid status: ${incident.status}`).to.include(incident.status);",
+											"    });",
+											"});",
+											"",
+											"// Test 6: Verify priority values are valid",
+											"pm.test(\"All incidents have valid priority values\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const incidents = jsonData.data.incidents;",
+											"    const validPriorities = [\"low\", \"medium\", \"high\", \"critical\"];",
+											"    ",
+											"    incidents.forEach((incident, index) => {",
+											"        pm.expect(validPriorities, `Incident at index ${index} has invalid priority: ${incident.priority}`).to.include(incident.priority);",
+											"    });",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents?page=1&limit=10&status=open&source=api&sortBy=createdAt&sortOrder=desc",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										},
+										{
+											"key": "status",
+											"value": "open"
+										},
+										{
+											"key": "priority",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "severity",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "source",
+											"value": "api"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail to get incidents list (Unauthorized - error 401)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 401",
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"No token provided. Please authenticate.\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents?page=1&limit=30&sortBy=createdAt&sortOrder=desc",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "30"
+										},
+										{
+											"key": "status",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "priority",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "severity",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "source",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "search",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "sortBy",
+											"value": "createdAt"
+										},
+										{
+											"key": "sortOrder",
+											"value": "desc"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get specific incident",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 200",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    ",
+											"    pm.expect(jsonData.success).to.be.true;",
+											"    pm.expect(jsonData.data).to.be.an(\"object\");",
+											"});",
+											"",
+											"// Test 3: Verify data has required fields",
+											"pm.test(\"Each incident has required fields\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const data = jsonData.data;",
+											"    const requiredFields = [\"_id\", \"title\", \"description\", \"status\", \"priority\", \"category\", \"source\", \"reporter\", \"assignee\", \"comments\", \"tags\", \"comments\", \"createdAt\", \"updatedAt\", \"__v\"];",
+											"    ",
+											"",
+											"    requiredFields.forEach(field=> {",
+											"        pm.expect(data, `Data has missing field: ${field}`).to.have.property(field);",
+											"    });",
+											"",
+											"});",
+											"",
+											"// Test 4: Verify status values are valid",
+											"pm.test(\"All incidents have valid status values\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const data = jsonData.data;",
+											"    const validStatuses = [\"open\", \"in-progress\", \"closed\", \"resolved\"];",
+											"    ",
+											"    pm.expect(validStatuses, `Data has invalid status: ${data.status}`).to.include(data.status);",
+											"",
+											"});",
+											"",
+											"// Test 5: Verify priority values are valid",
+											"pm.test(\"All incidents have valid priority values\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const data = jsonData.data;",
+											"    const validPriorities = [\"low\", \"medium\", \"high\", \"critical\"];",
+											"    ",
+											"    pm.expect(validPriorities, `Data has invalid priority value: ${data.priority}`).to.include(data.priority);",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd9600e",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd9600e"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail to get specific incident (Unauthorized - error 401)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 401",
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"No token provided. Please authenticate.\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd9600e",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd9600e"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail to get specific incident (invalid Id - error 404)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 404",
+											"pm.test(\"Status code is 404\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.contain(\"Resource not found\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697eacac12f8c6be5200458t",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697eacac12f8c6be5200458t"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Incident update",
+					"item": [
+						{
+							"name": "Update some information of an incident",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 200",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const requestBody = JSON.parse(pm.request.body.raw);",
+											"    ",
+											"    pm.expect(jsonData.success).to.be.true;",
+											"    pm.expect(jsonData.data.title).to.eql(requestBody.title);",
+											"    pm.expect(jsonData.data.description).to.be.an('string');",
+											"    pm.expect(jsonData.data.category).to.eql(requestBody.category);",
+											"    pm.expect(jsonData.data.status).to.be.an('string');",
+											"    pm.expect(jsonData.data.source).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter._id).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter.username).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter.email).to.be.an('string');",
+											"    pm.expect(jsonData.data.tags).to.be.an('array');",
+											"    pm.expect(jsonData.data.comments).to.be.an('array');",
+											"    pm.expect(jsonData.data.createdAt).to.be.an('string');",
+											"    pm.expect(jsonData.data.updatedAt).to.be.an('string');",
+											"});",
+											"",
+											"// Test 3: Verify status values are valid",
+											"pm.test(\"All incidents have valid status values\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const data = jsonData.data;",
+											"    const validStatuses = [\"open\", \"in-progress\", \"closed\", \"resolved\"];",
+											"    ",
+											"    pm.expect(validStatuses, `Data has invalid status: ${data.status}`).to.include(data.status);",
+											"",
+											"});",
+											"",
+											"// Test 4: Verify priority values are valid",
+											"pm.test(\"All incidents have valid priority values\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const data = jsonData.data;",
+											"    const validPriorities = [\"low\", \"medium\", \"high\", \"critical\"];",
+											"    ",
+											"    pm.expect(validPriorities, `Data has invalid priority value: ${data.priority}`).to.include(data.priority);",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"[Update]Physical Security Breach - Unauthorized Data Center Access\",\n    \"category\": \"[Update]Physical Security\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd96015",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd96015"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail to update information (empty body)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 400",
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"Validation failed\");",
+											"    pm.expect(jsonData.errors).to.be.an('array');",
+											"});",
+											"",
+											"// Test 3: Verify errors array contains objects with \"field\" and \"message\" properties",
+											"pm.test(\"Each error object has 'field' and 'message' properties\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    jsonData.errors.forEach(function (error) {",
+											"        pm.expect(error).to.have.property(\"field\");",
+											"        pm.expect(error).to.have.property(\"message\");",
+											"    });",
+											"});",
+											"",
+											"// Test 4: Verify the error for empty body",
+											"pm.test(\"Error message is displayed\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const errorMessage = jsonData.errors.map(function (error) {",
+											"        return error.message;",
+											"    });",
+											"",
+											"    pm.expect(jsonData.errors.length).to.be.eql(1);",
+											"    pm.expect(errorMessage).to.include(\"At least one field must be provided for update\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd96015",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd96015"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail to update information (invalid id - error 404)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 404",
+											"pm.test(\"Status code is 404\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"Resource not found\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"[Update]Physical Security Breach - Unauthorized Data Center Access\",\n    \"category\": \"[Update]Physical Security\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697eacac12f8c6be5200458t",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697eacac12f8c6be5200458t"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail to update information (Unauthorized - error 401)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 401",
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"No token provided. Please authenticate.\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"[Update]Physical Security Breach - Unauthorized Data Center Access\",\n    \"category\": \"[Update]Physical Security\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd96015",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd96015"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Fail to update information (Validation error - error 400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 400",
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"Validation failed\");",
+											"});",
+											"",
+											"// Test 3: Verify errors array contains objects with \"field\" and \"message\" properties",
+											"pm.test(\"Each error object has 'field' and 'message' properties\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    jsonData.errors.forEach(function (error) {",
+											"        pm.expect(error).to.have.property(\"field\");",
+											"        pm.expect(error).to.have.property(\"message\");",
+											"    });",
+											"});",
+											"",
+											"// Test 4: Verify required fields (title, description, category) are present in errors",
+											"pm.test(\"Required fields (title, description, category) are in errors\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const errorFields = jsonData.errors.map(function (error) {",
+											"        return error.field;",
+											"    });",
+											"",
+											"    pm.expect(jsonData.errors.length).to.be.eql(2);",
+											"    pm.expect(errorFields).to.include(\"title\");",
+											"    pm.expect(errorFields).to.include(\"category\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \" \",\n    \"category\": \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697eacac12f8c6be5200458t",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697eacac12f8c6be5200458t"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Delete incident",
+					"item": [
+						{
+							"name": "Successful delete an incident",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 200",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    ",
+											"    pm.expect(jsonData.success).to.be.true;",
+											"    pm.expect(jsonData.message).to.eql(\"Incident deleted successfully\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697fa5cf12f8c6be52004acc",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697fa5cf12f8c6be52004acc"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful delete an incident (unauthorized - error 401)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 401",
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"No token provided. Please authenticate.\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd96012",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd96012"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful delete an incident (invalid ID - error 404)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 404",
+											"pm.test(\"Status code is 404\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.contain(\"Resource not found\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd9601p",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd9601p"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful delete an incident (Forbidden - error 403)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 403",
+											"pm.test(\"Status code is 403\", function () {",
+											"    pm.response.to.have.status(403);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.contain(\"You are not authorized to delete this incident\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697f7b9b12f8c6be52004912",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697f7b9b12f8c6be52004912"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Add comment",
+					"item": [
+						{
+							"name": "Successful add a comment to an incident",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 201",
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Verify the last comment matches the request\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const comments = jsonData.data.comments;",
+											"    const lastComment = comments[comments.length - 1];",
+											"",
+											"    pm.expect(lastComment.text).to.eql(\"New comment\");",
+											"    pm.expect(lastComment.author.username).to.be.an('string');",
+											"    // Default incident information",
+											"    pm.expect(jsonData.success).to.be.true;",
+											"    pm.expect(jsonData.data.title).to.be.an('string');",
+											"    pm.expect(jsonData.data.description).to.be.an('string');",
+											"    pm.expect(jsonData.data.category).to.be.an('string');",
+											"    pm.expect(jsonData.data.status).to.be.an('string');",
+											"    pm.expect(jsonData.data.source).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter._id).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter.username).to.be.an('string');",
+											"    pm.expect(jsonData.data.reporter.email).to.be.an('string');",
+											"    pm.expect(jsonData.data.tags).to.be.an('array');",
+											"    pm.expect(jsonData.data.comments).to.be.an('array');",
+											"    pm.expect(jsonData.data.createdAt).to.be.an('string');",
+											"    pm.expect(jsonData.data.updatedAt).to.be.an('string');",
+											"});",
+											"",
+											"// Test 3: The incident update time should be equal to or after the last comment time",
+											"pm.test(\"Business Logic: Incident updatedAt timestamp was refreshed\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const incidentUpdate = new Date(jsonData.data.updatedAt);",
+											"    const lastCommentDate = new Date(jsonData.data.comments[jsonData.data.comments.length - 1].createdAt);",
+											"    ",
+											"    // The incident update time should be equal to or after the last comment time",
+											"    pm.expect(incidentUpdate.getTime()).to.be.at.least(lastCommentDate.getTime());",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"text\": \"New comment\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd96015/comments",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd96015",
+										"comments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful add a comment to an incident (Unauthorized - error 401)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 401",
+											"pm.test(\"Status code is 401\", function () {",
+											"    pm.response.to.have.status(401);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.contain(\"No token provided. Please authenticate.\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"text\": \"New comment\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd9601d/comments",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd9601d",
+										"comments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful add a comment to an incident (invalid ID - error 404)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 404",
+											"pm.test(\"Status code is 404\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.contain(\"Incident not found\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"text\": \"New comment\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd9601d/comments",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd9601d",
+										"comments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsuccessful add a comment to an incident (invalid values - error 400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// Test 1: Verify response status code is 400",
+											"pm.test(\"Status code is 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"// Test 2: Validate response data type and content",
+											"pm.test(\"Validation error structure and data are correct\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    pm.expect(jsonData.success).to.be.false;",
+											"    pm.expect(jsonData.error).to.eql(\"Validation failed\");",
+											"});",
+											"",
+											"// Test 3: Verify errors array contains objects with \"field\" and \"message\" properties",
+											"pm.test(\"Each error object has 'field' and 'message' properties\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    jsonData.errors.forEach(function (error) {",
+											"        pm.expect(error).to.have.property(\"field\");",
+											"        pm.expect(error).to.have.property(\"message\");",
+											"    });",
+											"});",
+											"",
+											"// Test 4: Verify required fields (text) is present in errors",
+											"pm.test(\"Required fields (text) is in errors\", function () {",
+											"    const jsonData = pm.response.json();",
+											"    const errorFields = jsonData.errors.map(function (error) {",
+											"        return error.field;",
+											"    });",
+											"",
+											"    pm.expect(jsonData.errors.length).to.be.eql(1);",
+											"    pm.expect(errorFields).to.include(\"text\");",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{authenticationToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"text\": \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/incidents/697e796b4cad75dbadd96015/comments",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"incidents",
+										"697e796b4cad75dbadd96015",
+										"comments"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									"// Pre-request Script",
+									"pm.test(\"Pre-check: Required fields are present\", function () {",
+									"    const body = JSON.parse(pm.request.body.raw);",
+									"    ",
+									"    // Check if fields exist and are not empty",
+									"    pm.expect(body.text, \"Comment text is required\").to.be.a('string').and.not.empty;",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					"// --- GLOBAL SECURITY & TYPE VALIDATION ---",
+					"",
+					"// 1. Critical Security Check: Information Exposure",
+					"pm.test(\"Security: No stack trace or internal paths leaked\", function () {",
+					"    const responseText = pm.response.text();",
+					"    const jsonData = pm.response.json();",
+					"    ",
+					"    // Check for common leakage patterns",
+					"    pm.expect(jsonData).to.not.have.property('stack');",
+					"    pm.expect(jsonData).to.not.have.property('internalLogs');",
+					"    pm.expect(responseText).to.not.include(\"node_modules\");",
+					"    pm.expect(responseText).to.not.include(\"/Users/\");",
+					"    pm.expect(responseText).to.not.include(\"CastError\");",
+					"});",
+					"",
+					"// 2. Global Type Validation",
+					"pm.test(\"Response follows standard envelope (success: boolean)\", function () {",
+					"    const jsonData = pm.response.json();",
+					"    pm.expect(jsonData.success).to.be.a('boolean');",
+					"});",
+					"",
+					"// 3. Performance Baseline",
+					"pm.test(\"Response time is within acceptable limits (under 1s)\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "authenticationToken",
+			"value": ""
+		}
+	]
+}
